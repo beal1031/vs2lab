@@ -4,6 +4,7 @@ Client and server using classes
 
 import logging
 import socket
+import json
 
 import const_cs
 from context import lab_logging
@@ -16,6 +17,13 @@ class Server:
     """ The server """
     _logger = logging.getLogger("vs2lab.lab1.clientserver.Server")
     _serving = True
+    phoneDB = {
+        "Mika": "123123",
+        "Alex": "2353453",
+        "Niklas": "345353",
+        "Maya": "123123123",
+        "Patric": "123123556"
+        }
 
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,10 +40,22 @@ class Server:
                 # pylint: disable=unused-variable
                 (connection, address) = self.sock.accept()  # returns new socket and address of client
                 while True:  # forever
+                    self._logger.info("Server waiting for request")
                     data = connection.recv(1024)  # receive data from client
+                    decodedData = data.decode('ascii')
+                    self._logger.info("Server received "+ decodedData)
+                    if decodedData == "GETALL":
+                        self._logger.info("Server sent " + decodedData)
+                        json_str = json.dumps(self.phoneDB)
+                        connection.send(json_str.encode('ascii'))
+                    elif decodedData in self.phoneDB:
+                        self._logger.info("Server found " + decodedData + " in phoneDB")
+                        connection.send(self.phoneDB[decodedData].encode('ascii'))
+                        self._logger.info("Server send " + self.phoneDB[decodedData])
+                    else:
+                        connection.send((decodedData + " not in phoneDB").encode('ascii'))
                     if not data:
                         break  # stop if client stopped
-                    connection.send(data + "*".encode('ascii'))  # return sent data plus an "*"
                 connection.close()  # close the connection
             except socket.timeout:
                 pass  # ignore timeouts
@@ -52,20 +72,12 @@ class Client:
         self.sock.connect((const_cs.HOST, const_cs.PORT))
         self.logger.info("Client connected to socket " + str(self.sock))
 
-    def call(self, msg_in="Alex"):
+    def call(self, msg_in="GELL"):
         """ Call server """
         self.sock.send(msg_in.encode('ascii'))  # send encoded string as data
+        self.logger.info("Client sent " + msg_in)
         data = self.sock.recv(1024)  # receive the response
-        msg_out = data.decode('ascii')
-        print(msg_out)  # print the result
-        self.sock.close()  # close the connection
-        self.logger.info("Client down.")
-        return msg_out
-    
-    def get(self, msg_in="Alex"):
-        """ Call server """
-        self.sock.send(msg_in.encode('ascii'))  # send encoded string as data
-        data = self.sock.recv(1024)  # receive the response
+        self.logger.info("Client received decoded: " + data.decode('ascii'))
         msg_out = data.decode('ascii')
         print(msg_out)  # print the result
         self.sock.close()  # close the connection
