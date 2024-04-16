@@ -52,7 +52,17 @@ class Client:
         self.sock.connect((const_cs.HOST, const_cs.PORT))
         self.logger.info("Client connected to socket " + str(self.sock))
 
-    def call(self, msg_in="Hello, world"):
+    def call(self, msg_in="Alex"):
+        """ Call server """
+        self.sock.send(msg_in.encode('ascii'))  # send encoded string as data
+        data = self.sock.recv(1024)  # receive the response
+        msg_out = data.decode('ascii')
+        print(msg_out)  # print the result
+        self.sock.close()  # close the connection
+        self.logger.info("Client down.")
+        return msg_out
+    
+    def get(self, msg_in="Alex"):
         """ Call server """
         self.sock.send(msg_in.encode('ascii'))  # send encoded string as data
         data = self.sock.recv(1024)  # receive the response
