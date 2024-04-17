@@ -38,20 +38,16 @@ class Server:
         while self._serving:  # as long as _serving (checked after connections or socket timeouts)
             try:
                 # pylint: disable=unused-variable
-                (connection, address) = self.sock.accept()  # returns new socket and address of client
+                (connection, adress) = self.sock.accept() #adress # returns new socket and address of client
                 while True:  # forever
                     self._logger.info("Server waiting for request")
                     data = connection.recv(1024)  # receive data from client
                     decodedData = data.decode('ascii')
                     self._logger.info("Server received "+ decodedData)
                     if decodedData == "GETALL":
-                        self._logger.info("Server sent " + decodedData)
-                        json_str = json.dumps(self.phoneDB)
-                        connection.send(json_str.encode('ascii'))
+                        self.getAll(decodedData, connection)
                     elif decodedData in self.phoneDB:
-                        self._logger.info("Server found " + decodedData + " in phoneDB")
-                        connection.send(self.phoneDB[decodedData].encode('ascii'))
-                        self._logger.info("Server send " + self.phoneDB[decodedData])
+                        self.get(decodedData, connection)
                     else:
                         connection.send((decodedData + " not in phoneDB").encode('ascii'))
                     if not data:
@@ -62,6 +58,15 @@ class Server:
         self.sock.close()
         self._logger.info("Server down.")
 
+    def get(self, decodedData, connection):
+        self._logger.info("Server found " + decodedData + " in phoneDB")
+        connection.send(self.phoneDB[decodedData].encode('ascii'))
+        self._logger.info("Server send " + self.phoneDB[decodedData])
+
+    def getAll(self, decodedData, connection):
+        self._logger.info("Server sent " + decodedData)
+        json_str = json.dumps(self.phoneDB)
+        connection.send(json_str.encode('ascii'))
 
 class Client:
     """ The client """
@@ -72,7 +77,7 @@ class Client:
         self.sock.connect((const_cs.HOST, const_cs.PORT))
         self.logger.info("Client connected to socket " + str(self.sock))
 
-    def call(self, msg_in="GELL"):
+    def call(self, msg_in="Mika"):
         """ Call server """
         self.sock.send(msg_in.encode('ascii'))  # send encoded string as data
         self.logger.info("Client sent " + msg_in)
