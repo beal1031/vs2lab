@@ -83,6 +83,18 @@ class Client:
         self.sock.close()  # close the connection
         self.logger.info("Client down.")
         return msg_out
+    def get(self, name):
+        self.sock.send(name.encode('ascii'))
+        self.logger.info("Client sent "+ name)
+        data = self.sock.recv(1024).decode('ascii')
+        self.logger.info("Client has received " + data)
+        print(data)
+        self.sock.close()
+        self.logger.info("Client down.")
+        return data
+    
+    def getall(self):
+        self.get("GETALL")
 
     def close(self):
         """ Close socket """
