@@ -99,7 +99,7 @@ class Client:
         return data
     
     def getall(self):
-        self.get("GETALL")
+        return self.get("GETALL")
 
     def close(self):
         """ Close socket """

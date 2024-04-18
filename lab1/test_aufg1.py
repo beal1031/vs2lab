@@ -27,22 +27,22 @@ class TestEchoService(unittest.TestCase):
 
     def test_srv_get_Patric(self):  
         """Test simple call"""
-        msg = self.client.call("Patric")
+        msg = self.client.get("Patric")
         self.assertEqual(msg, '123123556')
     
     def test_srv_get_Alex(self): 
         """Test simple call"""
-        msg = self.client.call("Alex")
+        msg = self.client.get("Alex")
         self.assertEqual(msg, '2353453')
 
     def test_srv_getAll(self): 
         """Test simple call"""
-        msg = self.client.call("GETALL")
+        msg = self.client.getall()
         self.assertEqual(msg, '{"Mika": "123123", "Alex": "2353453", "Niklas": "345353", "Maya": "123123123", "Patric": "123123556"}')
     
     def test_srv_get_Maya(self): 
         """Test simple call"""
-        msg = self.client.call("Maya")
+        msg = self.client.get("Maya")
         self.assertEqual(msg, '123123123')
 
     def tearDown(self):
