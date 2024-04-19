@@ -61,7 +61,7 @@ class Server:
     def get(self, decodedData, connection):
         self._logger.info("Server found " + decodedData + " in phoneDB")
         connection.send(self.phoneDB[decodedData].encode('ascii'))
-        self._logger.info("Server send " + self.phoneDB[decodedData])
+        self._logger.info("Server sent " + self.phoneDB[decodedData])
 
     def getAll(self, decodedData, connection):
         self._logger.info("Server sent " + decodedData)
@@ -88,6 +88,7 @@ class Client:
         self.sock.close()  # close the connection
         self.logger.info("Client down.")
         return msg_out
+    
     def get(self, name):
         self.sock.send(name.encode('ascii'))
         self.logger.info("Client sent "+ name)
