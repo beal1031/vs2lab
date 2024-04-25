@@ -1,4 +1,6 @@
 import constRPC
+import threading
+import time
 
 from context import lab_channel
 
@@ -12,15 +14,21 @@ class DBList:
         return self
 
 
-class Client:
+class Client(threading.Thread):
     def __init__(self):
         self.chan = lab_channel.Channel()
+        threading.Thread.__init__(self)
         self.client = self.chan.join('client')
         self.server = None
 
     def run(self):
         self.chan.bind(self.client)
         self.server = self.chan.subgroup('server')
+        base_list = DBList({'foo'})
+        result_list = self.append('bar', base_list)
+        print("Result: {}".format(result_list.value))
+
+        
 
     def stop(self):
         self.chan.leave('client')
@@ -52,6 +60,8 @@ class Server:
                 client = msgreq[0]  # see who is the caller
                 msgrpc = msgreq[1]  # fetch call & parameters
                 if constRPC.APPEND == msgrpc[0]:  # check what is being requested
+                    #self.chan.send_to({client},'10')
+                    time.sleep(10)
                     result = self.append(msgrpc[1], msgrpc[2])  # do local call
                     self.chan.send_to({client}, result)  # return response
                 else:
