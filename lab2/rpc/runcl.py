@@ -8,8 +8,7 @@ lab_logging.setup(stream_level=logging.INFO)
 
 cl = rpc.Client()
 cl.begin()
-while True:
+
+for i in range(10):
     time.sleep(1)
-    print('1')
-#cl.join()
-#cl.stop()
+    print("s")
