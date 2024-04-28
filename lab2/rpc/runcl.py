@@ -7,7 +7,7 @@ from context import lab_logging
 lab_logging.setup(stream_level=logging.INFO)
 
 cl = rpc.Client()
-cl.start()
+cl.begin()
 while True:
     time.sleep(1)
     print('1')

@@ -22,12 +22,16 @@ class Client(threading.Thread):
         self.server = None
 
     def run(self):
-        self.chan.bind(self.client)
-        self.server = self.chan.subgroup('server')
         base_list = DBList({'foo'})
         result_list = self.append('bar', base_list)
         print("Result: {}".format(result_list.value))
 
+    def begin(self):
+        self.chan.bind(self.client)
+        self.server = self.chan.subgroup('server')
+        self.chan.send_to(self.server, "10")
+        self.chan.receive_from(self.server)  # wait for response
+        self.start()
         
 
     def stop(self):
@@ -60,9 +64,8 @@ class Server:
                 client = msgreq[0]  # see who is the caller
                 msgrpc = msgreq[1]  # fetch call & parameters
                 if constRPC.APPEND == msgrpc[0]:  # check what is being requested
-                    #self.chan.send_to({client},'10')
                     time.sleep(10)
                     result = self.append(msgrpc[1], msgrpc[2])  # do local call
                     self.chan.send_to({client}, result)  # return response
                 else:
-                    pass  # unsupported request, simply ignore
+                    pass
