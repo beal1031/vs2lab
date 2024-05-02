@@ -22,29 +22,22 @@ class Client:
         self.server = None
 
     def waitForServer(self,callback):
-        callback(self.chan.receive_from(self.server))  # wait for response  
-    
-    def printResult(self,msgrcv):
-        print("Result: {}".format( msgrcv[1].value))
-
-    def begin(self):
-        print("begin")
-        self.chan.bind(self.client)
-        self.server = self.chan.subgroup('server')
-        base_list = DBList({'foo'})
-        self.append('bar', base_list)
+        msgrcv = self.chan.receive_from(self.server)
+        callback(msgrcv[1].value)  # wait for response  
 
     def stop(self):
         self.chan.leave('client')
 
-    def append(self, data, db_list):
+    def append(self, data, db_list, callback):
+        self.chan.bind(self.client)
+        self.server = self.chan.subgroup('server')
         assert isinstance(db_list, DBList)
         msglst = (constRPC.APPEND, data, db_list)  # message payload
         self.chan.send_to(self.server, msglst)  # send msg to server
 
         msgreq = self.chan.receive_from(self.server)
         if msgreq[1] == constRPC.OK:
-            test_thread = threading.Thread(target=self.waitForServer,args=(self.printResult,))
+            test_thread = threading.Thread(target=self.waitForServer,args=(callback,))
             test_thread.start()
 
 class Server:
