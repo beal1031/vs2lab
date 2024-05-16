@@ -11,11 +11,15 @@ splitter_address = "tcp://" + const.SRC + ":" + const.PORT_SPLITTER
 pull_socket = context.socket(zmq.PULL) # create pull socket for receiving sentences from splitter
 pull_socket.connect(splitter_address) # connect to splitter
 
-push_socket = context.socket(zmq.PUSH) # create push socket for sending words to reducer
+push_socket1 = context.socket(zmq.PUSH) # create push socket for sending words to reducer
+push_socket2 = context.socket(zmq.PUSH) # create push socket for sending words to reducer
 
 # define reducer addresses
 reducer1_address = "tcp://" + const.SRC + ":" + const.PORT_REDUCER1
 reducer2_address = "tcp://" + const.SRC + ":" + const.PORT_REDUCER2
+
+push_socket1.connect(reducer1_address)
+push_socket2.connect(reducer2_address)
 
 time.sleep(1)
 
@@ -39,13 +43,10 @@ while True:
         # split words between reducers based on the Unicode code of the first character
         if (ord(word[0]) % 2 == 0):
             address = reducer1_address
+            push_socket1.send(pickle.dumps((me, word)))
         else:
             address = reducer2_address
-
-        # connect to reducer, send and disconnect
-        push_socket.connect(address)
-        push_socket.send(pickle.dumps((me, word)))
-        push_socket.disconnect(address)
+            push_socket2.send(pickle.dumps((me, word)))
 
 
 print("end of file reached")
@@ -56,14 +57,12 @@ time.sleep(1)
 
 print("shut down receiver 1")
 
-push_socket.connect(reducer1_address)
-push_socket.send(pickle.dumps(const.EOF))
-push_socket.disconnect(reducer1_address)
+push_socket1.send(pickle.dumps(const.EOF))
+push_socket1.disconnect(reducer1_address)
 
 time.sleep(1)
 
 print("shut down receiver 2")
 
-push_socket.connect(reducer2_address)
-push_socket.send(pickle.dumps(const.EOF))
-push_socket.disconnect(reducer2_address)
+push_socket2.send(pickle.dumps(const.EOF))
+push_socket2.disconnect(reducer2_address)
