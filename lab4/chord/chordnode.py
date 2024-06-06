@@ -9,6 +9,7 @@ Simple implementation of a chord DHT (distributed hash table)
 """
 
 import logging
+import time
 
 import constChord
 
@@ -131,7 +132,7 @@ class ChordNode:
 
         self.logger.info("ChordNode {:04n} ready.".format(self.node_id))
 
-    def recursive_lookup(self, sender, key, origin):
+    def recursive_lookup(self, key, origin):
         """
         Perform a recursive lookup.
         :param sender: the ID of the node sending the request
@@ -139,21 +140,32 @@ class ChordNode:
         :param origin: the original node that initiated the lookup
         :return: None
         """
+        #print(self.node_id)
+        #print("recursive")
+        #print(key, "key")
+        
         next_id = self.local_successor_node(key)
+        
+        #print(next_id)
+        
         if next_id == self.node_id:
-            self.channel.send_to([origin], (constChord.LOOKUP_REP, self.node_id))
+            print('found')
+            self.channel.send_to([origin], (constChord.LOOKUP_REP, next_id))
         else:
-            self.channel.send_to([next_id], (constChord.LOOKUP_REQ, key, origin))
+            #self.recursive_lookup(key, origin, next_id)
+            print("else to " + str(next_id))
+            self.channel.send_to([str(next_id)], (constChord.LOOKUP_REQ, key))
+           
 
-
-   
 
     def run(self):
         while True:  # Start node operation loop
+            
             message = self.channel.receive_from_any()  # Wait for any request
             sender: str = message[0]  # Identify the sender
             request = message[1]  # And the actual request
-
+            if  len(request) >= 2:
+                print('true'+ str(self.node_id))
             # If sender is a node (that stays in the ring) then update known nodes
             if request[0] != constChord.LEAVE and self.channel.channel.sismember('node', sender):
                 self.add_node(sender)  # remember sender node
@@ -167,21 +179,31 @@ class ChordNode:
                 self.logger.info("Node {:04n} received LOOKUP {:04n} from {:04n}."
                                  .format(self.node_id, int(request[1]), int(sender)))
                 
-                key = request[1]
                 
-                if len(request) > 2:
-                    origin = request[2]
+                key = request[1] 
                 
+                current = sender
+                if len(request) >= 3:
+                    current = request[2]
+                
+                print('recursive_lookup')
+                next_id = self.local_successor_node(key)
+        
+                #print(next_id)
+        
+                if next_id == self.node_id:
+                    print('found')
+                    self.channel.send_to([request[2]], (constChord.LOOKUP_REP, next_id))
                 else:
-                    origin = sender
-
-                self.recursive_lookup(sender, key, origin)
-
-
+                    #self.recursive_lookup(key, origin, next_id)
+                    print("else to " + str(next_id))
+                    self.channel.send_to([str(next_id)], (constChord.LOOKUP_REQ, key,current))
+                
+                time.sleep(2000)
 
                 # look up and return local successor 
-                next_id: int = self.local_successor_node(request[1])
-                self.channel.send_to([sender], (constChord.LOOKUP_REP, next_id))
+                #next_id: int = self.local_successor_node(request[1])
+                #self.channel.send_to([sender], (constChord.LOOKUP_REP, next_id))
 
                 # Finally do a sanity check
                 if not self.channel.exists(next_id):  # probe for existence
@@ -197,6 +219,7 @@ class ChordNode:
                 self.logger.info("Node {:04n} received LEAVE from {:04n}."
                                  .format(self.node_id, int(sender)))
                 self.delete_node(sender)  # update known nodes
+                
 
             self.recompute_finger_table()  # adjust finger-table based on updated node set
 

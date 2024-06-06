@@ -29,12 +29,17 @@ class DummyChordClient:
 
     def enter(self):
         self.channel.bind(self.node_id)
-
+        
+    
     def run(self):
                 
         # Get all nodes from the channel
         nodes = {i.decode() for i in list(self.channel.channel.smembers('node'))}
+        print(nodes)
+        
+        
         random_node = random.choice(list(nodes))
+        
         random_key = random.randint(0, 2**self.channel.n_bits - 1)
 
         self.logger.info(f"Client {self.node_id} is looking up key {random_key} starting at node {random_node}")
