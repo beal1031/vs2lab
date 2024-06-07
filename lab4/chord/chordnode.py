@@ -164,8 +164,7 @@ class ChordNode:
             message = self.channel.receive_from_any()  # Wait for any request
             sender: str = message[0]  # Identify the sender
             request = message[1]  # And the actual request
-            if  len(request) >= 2:
-                print('true'+ str(self.node_id))
+
             # If sender is a node (that stays in the ring) then update known nodes
             if request[0] != constChord.LEAVE and self.channel.channel.sismember('node', sender):
                 self.add_node(sender)  # remember sender node
@@ -186,20 +185,13 @@ class ChordNode:
                 if len(request) >= 3:
                     current = request[2]
                 
-                print('recursive_lookup')
                 next_id = self.local_successor_node(key)
         
-                #print(next_id)
-        
                 if next_id == self.node_id:
-                    print('found')
                     self.channel.send_to([request[2]], (constChord.LOOKUP_REP, next_id))
                 else:
-                    #self.recursive_lookup(key, origin, next_id)
-                    print("else to " + str(next_id))
                     self.channel.send_to([str(next_id)], (constChord.LOOKUP_REQ, key,current))
-                
-                time.sleep(2000)
+            
 
                 # look up and return local successor 
                 #next_id: int = self.local_successor_node(request[1])
