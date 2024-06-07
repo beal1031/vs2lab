@@ -132,31 +132,6 @@ class ChordNode:
 
         self.logger.info("ChordNode {:04n} ready.".format(self.node_id))
 
-    def recursive_lookup(self, key, origin):
-        """
-        Perform a recursive lookup.
-        :param sender: the ID of the node sending the request
-        :param key: the key being looked up
-        :param origin: the original node that initiated the lookup
-        :return: None
-        """
-        #print(self.node_id)
-        #print("recursive")
-        #print(key, "key")
-        
-        next_id = self.local_successor_node(key)
-        
-        #print(next_id)
-        
-        if next_id == self.node_id:
-            print('found')
-            self.channel.send_to([origin], (constChord.LOOKUP_REP, next_id))
-        else:
-            #self.recursive_lookup(key, origin, next_id)
-            print("else to " + str(next_id))
-            self.channel.send_to([str(next_id)], (constChord.LOOKUP_REQ, key))
-           
-
 
     def run(self):
         while True:  # Start node operation loop
