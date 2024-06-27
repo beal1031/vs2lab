@@ -114,26 +114,23 @@ class Participant:
     def determineCoordinator(self):
             min = 1000000
             id = self.participant
+            print("search new coordinator...")
             for participant in self.all_participants:
                 if int(participant) < int(min):
                     min = participant
-            print("coordinator vorher: "+str(self.coordinator))
+            print("old coordinator: " + str(self.coordinator))
             self.coordinator={min}
-            print("coordinator nachher: "+str(self.coordinator))
+            print("new coordinator: " + str(self.coordinator))
             self.all_participants.remove(min)
-            print("new coordinator: "+min)
             if self.coordinator == {id}:
                 self.channel.send_to(self.all_participants, self.state)
                 if(self.state != "PRECOMMIT"):
                     yet_to_receive = list(self.all_participants)
-                    print("warten auf alle")
                     while len(yet_to_receive) > 0:
                         msg = self.channel.receive_from(self.all_participants, TIMEOUT)
                         if (not msg):
-                            print("timeout")
                             break
                         else:
-                            print("antwort von participant")
                             assert msg[1] == VOTE_ABORT or msg[1]==VOTE_COMMIT
                             yet_to_receive.remove(msg[0])
                     self._enter_state('ABORT')
@@ -145,7 +142,6 @@ class Participant:
                     while len(yet_to_receive) > 0:
                         msg = self.channel.receive_from(self.all_participants, TIMEOUT)
                         if (not msg):
-                            print("timeout")
                             break
                         else:
                             assert msg[1] == READY_COMMIT
@@ -157,18 +153,14 @@ class Participant:
             else:
                 msg = self.channel.receive_from(self.coordinator,5)
                 if(not msg):
-                    print("Koordinator vorher local abort")
                     self.determineCoordinator()
                     return
                 if msg[1]=="INIT":
                     self.channel.send_to(self.coordinator, VOTE_COMMIT)
-                    print("init send")
                 elif msg[1]=="READY":
                     self.channel.send_to(self.coordinator, VOTE_COMMIT)
-                    print("wait send")
                 elif msg[1]=="ABORT":
                     self.channel.send_to(self.coordinator, VOTE_ABORT)
-                    print("abort send")
                 else:
                     print("STATE of Coordinator not INIT, WAIT or ABORT, new State: " + msg[1])
 
